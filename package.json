@@ -1,13 +1,11 @@
 {
   "name": "knack-install",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "installs repository as a node module",
   "main": "./dist/index.js",
   "bin": "./dist/index.js",
   "scripts": {
-    "pub": "npm publish --access=public",
-    "build": "rm -rf dist && microbundle --tsconfig tsconfig.json --no-sourcemap && npm publish --access=public",
-    "test": "PACKAGE_NAME=KnackLab"
+    "pub": "npm publish --access=public"
   },
   "keywords": [],
   "author": "Israel Ayokunnu",
