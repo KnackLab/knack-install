@@ -41,12 +41,22 @@ const repositoryDir = `node_modules/${repoName}`;
 naturalClone();
 
 function removeExistingCloneDirectory() {
+  // remove repository in node_module if exist
   if (fs.existsSync(repositoryDir)) {
     const result = spawnSync('rm', ['-rf', repositoryDir]);
     if (result.status !== 0) {
       console.error(
         `Error removing directory '${repositoryDir}': ${result.stderr}`
       );
+      process.exit(1);
+    }
+  }
+
+  // remove cloned if exist
+  if (fs.existsSync(repoName)) {
+    const result = spawnSync('rm', ['-rf', repoName]);
+    if (result.status !== 0) {
+      console.error(`Error removing directory '${repoName}': ${result.stderr}`);
       process.exit(1);
     }
   }
@@ -76,9 +86,9 @@ function naturalClone() {
     }
   }
 
-  updatePackageJSONPreInstallScript();
+  updatePackageJSONPostInstallScript();
   upsertInstalledRepositories();
-  createPreInstallerFile();
+  createPostInstallerFile();
   console.log(`${argv.repo} cloned and added to node_modules successfully`);
 }
 
@@ -101,38 +111,38 @@ function cloneWithToken() {
   }
 
   console.log(`${argv.repo} cloned and added to node_modules successfully`);
-  updatePackageJSONPreInstallScript();
+  updatePackageJSONPostInstallScript();
   upsertInstalledRepositories();
-  createPreInstallerFile();
+  createPostInstallerFile();
 }
 
 /**
- * check package.json preinstall script and add or append knack-install-preinstall-script.js
+ * check package.json postinstall script and add or append knack-install-postinstall-script.js
  * Such that when you run npm i, it will install the necessary repositories
  */
-function updatePackageJSONPreInstallScript() {
+function updatePackageJSONPostInstallScript() {
   const command =
-    'npm i knack-install && node knack-install-preinstall-script.js';
+    'npm i knack-install && node knack-install-postinstall-script.js';
 
   try {
     const packageJson = JSON.parse(fs.readFileSync('./package.json'));
     const scripts = packageJson.scripts || {};
 
     if (
-      scripts.hasOwnProperty('preinstall') &&
-      scripts.preinstall.trim() !== ''
+      scripts.hasOwnProperty('postinstall') &&
+      scripts.postinstall.trim() !== ''
     ) {
-      if (!scripts.preinstall.includes(command)) {
-        // append additional command to the existing preinstall script
-        scripts.preinstall += ` && ${command}`;
+      if (!scripts.postinstall.includes(command)) {
+        // append additional command to the existing postinstall script
+        scripts.postinstall += ` && ${command}`;
       }
     } else {
-      // create preinstall script with the additional command
-      scripts.preinstall = command;
+      // create postinstall script with the additional command
+      scripts.postinstall = command;
     }
 
     fs.writeFileSync('./package.json', JSON.stringify(packageJson, null, 2));
-    console.log('Preinstall script updated.');
+    console.log('postinstall script updated.');
   } catch (err) {
     console.error('Error reading package.json file:', err);
   }
@@ -165,10 +175,10 @@ function upsertInstalledRepositories() {
 }
 
 /**
- * Creates knack-install-preinstall-script.js file if it does not exist
+ * Creates knack-install-postinstall-script.js file if it does not exist
  */
-function createPreInstallerFile() {
-  const fileName = 'knack-install-preinstall-script.js';
+function createPostInstallerFile() {
+  const fileName = 'knack-install-postinstall-script.js';
 
   if (!fs.existsSync(fileName)) {
     const fileContent = `#!/usr/bin/env node
