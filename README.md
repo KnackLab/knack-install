@@ -1,5 +1,4 @@
 # knack-install
-
  Package to install a repository has npm dependency
 
 Usage:
@@ -11,4 +10,3 @@ Options:
 * -r, --repo     Provide a link to your repository
 * -t, --token    Personal access token to clone private repo
 * --help     Show help
-*  -d, --destination  Clone destination                 [default:"node_modules"]
