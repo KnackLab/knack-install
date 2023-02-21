@@ -59,7 +59,7 @@ function naturalClone() {
   const installCommand = `cd node_modules/${repoName} && npm install && npm run build`;
 
   const commands = [cloneCommand, installCommand];
-  const command = commands.join('&&');
+  const command = commands.join(' && ');
 
   const result = spawnSync(command, { shell: true, stdio: 'inherit' });
   if (result.status !== 0) {
@@ -89,7 +89,7 @@ function cloneWithToken() {
   const installCommand = `cd node_modules/${repoName} && npm install && npm run build`;
 
   const commands = [cloneCommand, installCommand];
-  const command = commands.join('&&');
+  const command = commands.join(' && ');
 
   const result = spawnSync(command, { shell: true, stdio: 'inherit' });
   if (result.status !== 0) {
