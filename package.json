@@ -1,6 +1,6 @@
 {
   "name": "knack-install",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "installs repository as a node module",
   "main": "./dist/index.js",
   "bin": "./dist/index.js",
@@ -17,7 +17,6 @@
     "dotenv": "^16.0.3"
   },
   "dependencies": {
-    "envalid": "^7.3.1",
     "util": "^0.12.4",
     "yargs": "^17.7.0"
   },
