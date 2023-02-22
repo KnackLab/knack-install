@@ -1,49 +1,75 @@
 #!/usr/bin/env node
-require('dotenv').config();
-const { spawnSync } = require('child_process');
-const fs = require('fs');
-const { parse, basename } = require('path');
-const repoDB = 'knack-installer-repositories.json';
+require("dotenv").config();
+const { spawnSync } = require("child_process");
+const fs = require("fs");
+const { parse, basename } = require("path");
+const yargs = require("yargs");
+const { hideBin } = require("yargs/helpers");
+const { loggerColor } = require("./misc/loggerStyles");
+const { githubClone } = require("./utils/helpers");
+const repoDB = "knack-installer-repositories.json";
 
-const argv = require('yargs/yargs')(process.argv.slice(2))
-  .usage('Usage: $0 --repo <repository-url> or $0 --repo=<repository-url>')
+// hide bin removes the first two elements in process.argv
+const argv = yargs(hideBin(process.argv)) // we're passing the arguments to yargs to parse them. you can also do require('yargs/yargs')().parse([ '-x', '1', '-y', '2' ])
+  .usage("Usage: $0 --repo <repository-url> or $0 --repo=<repository-url>")
   .option({
     repo: {
-      alias: 'r',
-      describe: 'Provide a link to your repository',
+      alias: "r",
+      describe: "Provide a link to your repository",
       demandOption: true,
-      type: 'string',
+      type: "string",
       coerce: (url) => {
-        if (!url || url.trim() === '') {
-          throw new Error('Repository URL cannot be empty');
+        if (!url || url.trim() === "") {
+          throw new Error("Repository URL cannot be empty");
         }
         return url.trim();
       },
     },
     token: {
-      alias: 't',
-      describe: 'Personal access token to clone private repo',
+      alias: "t",
+      describe: "Personal access token to clone private repo",
       demandOption: false,
       default: process.env.GITHUB_PAT,
     },
     help: {
-      alias: 'h',
-      describe: 'Show help',
-      type: 'boolean',
+      alias: "h",
+      describe: "Show help",
+      type: "boolean",
     },
   })
   .help().argv;
 
 const parsedUrl = parse(argv.repo);
-const repoName = basename(parsedUrl.base, '.git');
-const repositoryDir = `node_modules/${repoName}`;
+// console.log({ repo: argv.repo });
+// console.log({ parsedUrl });
+
+try {
+  const parsedRepoURL = new URL(argv.repo);
+
+  if (!parsedRepoURL.href.endsWith(".git")) {
+    throw new Error("Invalid git repository");
+  }
+
+  //path to node_modules
+
+  return;
+  githubClone(parsedRepoURL.href, `node_modules`);
+  // const repoName = basename(parsedRepoURL.href, ".git");
+
+  if (result.status !== 0) {
+    throw new Error("Invalid git repository");
+  }
+} catch (error) {
+  return console.log(loggerColor("danger", error));
+}
+// const repositoryDir = `node_modules/${repoName}`;
 
 naturalClone();
 
 function removeExistingCloneDirectory() {
   // remove repository in node_module if exist
   if (fs.existsSync(repositoryDir)) {
-    const result = spawnSync('rm', ['-rf', repositoryDir]);
+    const result = spawnSync("rm", ["-rf", repositoryDir]);
     if (result.status !== 0) {
       console.error(
         `Error removing directory '${repositoryDir}': ${result.stderr}`
@@ -54,7 +80,7 @@ function removeExistingCloneDirectory() {
 
   // remove cloned if exist
   if (fs.existsSync(repoName)) {
-    const result = spawnSync('rm', ['-rf', repoName]);
+    const result = spawnSync("rm", ["-rf", repoName]);
     if (result.status !== 0) {
       console.error(`Error removing directory '${repoName}': ${result.stderr}`);
       process.exit(1);
@@ -69,19 +95,19 @@ function naturalClone() {
   const installCommand = `cd node_modules/${repoName} && npm install && npm run build`;
 
   const commands = [cloneCommand, installCommand];
-  const command = commands.join(' && ');
+  const command = commands.join(" && ");
 
-  const result = spawnSync(command, { shell: true, stdio: 'inherit' });
+  const result = spawnSync(command, { shell: true, stdio: "inherit" });
   if (result.status !== 0) {
     console.error(`Command '${command}' failed: ${result.stderr}`);
     if (argv.token) {
       cloneWithToken();
     } else {
-      console.log('Consider the following options');
+      console.log("Consider the following options");
       console.log(
-        '- Provide a token or set GITHUB_PAT={TOKEN_VALUE} in your environment'
+        "- Provide a token or set GITHUB_PAT={TOKEN_VALUE} in your environment"
       );
-      console.log('- Make sure you have access to the repository');
+      console.log("- Make sure you have access to the repository");
       process.exit(1);
     }
   }
@@ -94,19 +120,19 @@ function naturalClone() {
 
 function cloneWithToken() {
   removeExistingCloneDirectory();
-  const repoGITLink = argv.repo.split('https://github.com/')[1];
+  const repoGITLink = argv.repo.split("https://github.com/")[1];
   const cloneCommand = `git clone https://${argv.token}@github.com/${repoGITLink} ${repositoryDir}`;
   const installCommand = `cd node_modules/${repoName} && npm install && npm run build`;
 
   const commands = [cloneCommand, installCommand];
-  const command = commands.join(' && ');
+  const command = commands.join(" && ");
 
-  const result = spawnSync(command, { shell: true, stdio: 'inherit' });
+  const result = spawnSync(command, { shell: true, stdio: "inherit" });
   if (result.status !== 0) {
     console.error(`Command '${command}' failed: ${result.stderr}`);
-    console.log('Consider the following options');
-    console.log('- Ensure you have provided a correct token');
-    console.log('- Make sure you have access to the repository');
+    console.log("Consider the following options");
+    console.log("- Ensure you have provided a correct token");
+    console.log("- Make sure you have access to the repository");
     process.exit(1);
   }
 
@@ -122,15 +148,15 @@ function cloneWithToken() {
  */
 function updatePackageJSONPostInstallScript() {
   const command =
-    'npm i knack-install && node knack-install-postinstall-script.js';
+    "npm i knack-install && node knack-install-postinstall-script.js";
 
   try {
-    const packageJson = JSON.parse(fs.readFileSync('./package.json'));
+    const packageJson = JSON.parse(fs.readFileSync("./package.json"));
     const scripts = packageJson.scripts || {};
 
     if (
-      scripts.hasOwnProperty('postinstall') &&
-      scripts.postinstall.trim() !== ''
+      scripts.hasOwnProperty("postinstall") &&
+      scripts.postinstall.trim() !== ""
     ) {
       if (!scripts.postinstall.includes(command)) {
         // append additional command to the existing postinstall script
@@ -141,10 +167,10 @@ function updatePackageJSONPostInstallScript() {
       scripts.postinstall = command;
     }
 
-    fs.writeFileSync('./package.json', JSON.stringify(packageJson, null, 2));
-    console.log('postinstall script updated.');
+    fs.writeFileSync("./package.json", JSON.stringify(packageJson, null, 2));
+    console.log("postinstall script updated.");
   } catch (err) {
-    console.error('Error reading package.json file:', err);
+    console.error("Error reading package.json file:", err);
   }
 }
 
@@ -178,7 +204,7 @@ function upsertInstalledRepositories() {
  * Creates knack-install-postinstall-script.js file if it does not exist
  */
 function createPostInstallerFile() {
-  const fileName = 'knack-install-postinstall-script.js';
+  const fileName = "knack-install-postinstall-script.js";
 
   if (!fs.existsSync(fileName)) {
     const fileContent = `#!/usr/bin/env node
@@ -196,6 +222,6 @@ function createPostInstallerFile() {
   `;
 
     fs.writeFileSync(fileName, fileContent);
-    fs.chmodSync(fileName, '755');
+    fs.chmodSync(fileName, "755");
   }
 }
