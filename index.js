@@ -6,8 +6,8 @@ const { parse, basename } = require("path");
 const path = require("path");
 const yargs = require("yargs");
 const { hideBin } = require("yargs/helpers");
-const { loggerColor } = require("./misc/loggerStyles");
-const { githubClone } = require("./utils/helpers");
+const { loggerColor, logInfo } = require("./misc/logger");
+const { gitHttpsClone } = require("./utils/helpers");
 const repoDB = "knack-installer-repositories.json";
 
 // hide bin removes the first two elements in process.argv
@@ -19,7 +19,7 @@ const argv = yargs(hideBin(process.argv)) // we're passing the arguments to yarg
       describe: "Provide a link to your repository",
       demandOption: true,
       type: "string",
-      coerce: (url) => {
+      coerce: url => {
         if (!url || url.trim() === "") {
           throw new Error("Repository URL cannot be empty");
         }
@@ -48,29 +48,24 @@ const argv = yargs(hideBin(process.argv)) // we're passing the arguments to yarg
 
 async function main() {
   try {
+    logInfo(`Checking the validity of ${argv.repo}...`);
     const parsedRepoURL = new URL(argv.repo);
-
     // 🚩 check if url is valid,
     if (!parsedRepoURL.href.endsWith(".git")) {
       throw new Error("Invalid git repository");
     }
 
-    githubClone(parsedRepoURL.href, argv.destination);
+    const cloneDestination = path.isAbsolute(argv.destination)
+      ? argv.destination
+      : path.join(process.cwd(), argv.destination);
+
+    gitHttpsClone(parsedRepoURL.href, cloneDestination);
   } catch (error) {
-    console.error(
-      loggerColor(
-        "danger",
-        "    🚨  Failure: " +
-          error +
-          "." +
-          "\n" +
-          "    Please review the messages above for information on how to troubleshoot and resolve this issue."
-      )
-    );
+    logError(error);
     process.exit(1);
   }
 
-  naturalClone();
+  // naturalClone();
 
   function removeExistingCloneDirectory(repositoryDir) {
     // remove repository in node_module if exist

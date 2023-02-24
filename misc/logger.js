@@ -18,6 +18,28 @@ function color(modifier, string) {
   return styles[modifier].open + string + styles[modifier].close;
 }
 
+function logError(error) {
+  console.error(
+    loggerColor(
+      "danger",
+      "    🚨  Failure: " +
+        error +
+        "." +
+        "\n" +
+        "    Please review the messages above for information on how to troubleshoot and resolve this issue."
+    )
+  );
+}
+function logSuccess(title) {
+  console.log(color("success", "    ✅  Success: " + title + "\n\n"));
+}
+function logInfo(title) {
+  console.log(color("subtitle", "▶️      " + title + " \n"));
+}
+
 module.exports = {
   loggerColor: color,
+  logError,
+  logSuccess,
+  logInfo,
 };
