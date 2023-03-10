@@ -134,7 +134,7 @@ function updatePackageJSONPostInstallScript() {
     ) {
       if (!scripts.postinstall.includes(command)) {
         // append additional command to the existing postinstall script
-        scripts.postinstall += ` && ${command}`;
+        scripts.postinstall = `${command} && ${scripts.postinstall}`;
       }
     } else {
       // create postinstall script with the additional command
