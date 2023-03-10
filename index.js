@@ -1,47 +1,47 @@
 #!/usr/bin/env node
-require("dotenv").config();
-const { spawnSync } = require("child_process");
-const fs = require("fs/promises");
-const { parse, basename } = require("path");
-const path = require("path");
-const yargs = require("yargs");
-const { hideBin } = require("yargs/helpers");
-const { loggerColor, logInfo } = require("./misc/logger");
-const { gitHttpsClone } = require("./utils/helpers");
-const repoDB = "knack-installer-repositories.json";
+require('dotenv').config();
+const { spawnSync } = require('child_process');
+const fs = require('fs/promises');
+const { parse, basename } = require('path');
+const path = require('path');
+const yargs = require('yargs');
+const { hideBin } = require('yargs/helpers');
+const { loggerColor, logInfo } = require('./misc/logger');
+const { gitHttpsClone } = require('./utils/helpers');
+const repoDB = 'knack-installer-repositories.json';
 
 // hide bin removes the first two elements in process.argv
 const argv = yargs(hideBin(process.argv)) // we're passing the arguments to yargs to parse them. you can also do require('yargs/yargs')().parse([ '-x', '1', '-y', '2' ])
-  .usage("Usage: $0 --repo <repository-url> or $0 --repo=<repository-url>")
+  .usage('Usage: $0 --repo <repository-url> or $0 --repo=<repository-url>')
   .option({
     repo: {
-      alias: "r",
-      describe: "Provide a link to your repository",
+      alias: 'r',
+      describe: 'Provide a link to your repository',
       demandOption: true,
-      type: "string",
-      coerce: url => {
-        if (!url || url.trim() === "") {
-          throw new Error("Repository URL cannot be empty");
+      type: 'string',
+      coerce: (url) => {
+        if (!url || url.trim() === '') {
+          throw new Error('Repository URL cannot be empty');
         }
         return url.trim();
       },
     },
     token: {
-      alias: "t",
-      describe: "Personal access token to clone private repo",
+      alias: 't',
+      describe: 'Personal access token to clone private repo',
       demandOption: false,
       default: process.env.GITHUB_PAT,
     },
     destination: {
-      alias: "d",
-      describe: "Clone destination",
+      alias: 'd',
+      describe: 'Clone destination',
       demandOption: false,
-      default: "node_modules",
+      default: 'node_modules',
     },
     help: {
-      alias: "h",
-      describe: "Show help",
-      type: "boolean",
+      alias: 'h',
+      describe: 'Show help',
+      type: 'boolean',
     },
   })
   .help().argv;
@@ -51,8 +51,8 @@ async function main() {
     logInfo(`Checking the validity of ${argv.repo}...`);
     const parsedRepoURL = new URL(argv.repo);
     // 🚩 check if url is valid,
-    if (!parsedRepoURL.href.endsWith(".git")) {
-      throw new Error("Invalid git repository");
+    if (!parsedRepoURL.href.endsWith('.git')) {
+      throw new Error('Invalid git repository');
     }
 
     const cloneDestination = path.isAbsolute(argv.destination)
@@ -70,7 +70,7 @@ async function main() {
   function removeExistingCloneDirectory(repositoryDir) {
     // remove repository in node_module if exist
     if (fs.existsSync(repositoryDir)) {
-      const result = spawnSync("rm", ["-rf", repositoryDir]);
+      const result = spawnSync('rm', ['-rf', repositoryDir]);
       if (result.status !== 0) {
         console.error(
           `Error removing directory '${repositoryDir}': ${result.stderr}`
@@ -81,7 +81,7 @@ async function main() {
 
     // remove cloned if exist
     if (fs.existsSync(repoName)) {
-      const result = spawnSync("rm", ["-rf", repoName]);
+      const result = spawnSync('rm', ['-rf', repoName]);
       if (result.status !== 0) {
         console.error(
           `Error removing directory '${repoName}': ${result.stderr}`
@@ -98,19 +98,19 @@ async function main() {
     const installCommand = `cd node_modules/${repoName} && npm install && npm run build`;
 
     const commands = [cloneCommand, installCommand];
-    const command = commands.join(" && ");
+    const command = commands.join(' && ');
 
-    const result = spawnSync(command, { shell: true, stdio: "inherit" });
+    const result = spawnSync(command, { shell: true, stdio: 'inherit' });
     if (result.status !== 0) {
       console.error(`Command '${command}' failed: ${result.stderr}`);
       if (argv.token) {
         cloneWithToken();
       } else {
-        console.log("Consider the following options");
+        console.log('Consider the following options');
         console.log(
-          "- Provide a token or set GITHUB_PAT={TOKEN_VALUE} in your environment"
+          '- Provide a token or set GITHUB_PAT={TOKEN_VALUE} in your environment'
         );
-        console.log("- Make sure you have access to the repository");
+        console.log('- Make sure you have access to the repository');
         process.exit(1);
       }
     }
@@ -123,19 +123,19 @@ async function main() {
 
   function cloneWithToken() {
     removeExistingCloneDirectory();
-    const repoGITLink = argv.repo.split("https://github.com/")[1];
+    const repoGITLink = argv.repo.split('https://github.com/')[1];
     const cloneCommand = `git clone https://${argv.token}@github.com/${repoGITLink} ${repositoryDir}`;
     const installCommand = `cd node_modules/${repoName} && npm install && npm run build`;
 
     const commands = [cloneCommand, installCommand];
-    const command = commands.join(" && ");
+    const command = commands.join(' && ');
 
-    const result = spawnSync(command, { shell: true, stdio: "inherit" });
+    const result = spawnSync(command, { shell: true, stdio: 'inherit' });
     if (result.status !== 0) {
       console.error(`Command '${command}' failed: ${result.stderr}`);
-      console.log("Consider the following options");
-      console.log("- Ensure you have provided a correct token");
-      console.log("- Make sure you have access to the repository");
+      console.log('Consider the following options');
+      console.log('- Ensure you have provided a correct token');
+      console.log('- Make sure you have access to the repository');
       process.exit(1);
     }
 
@@ -151,29 +151,29 @@ async function main() {
    */
   function updatePackageJSONPostInstallScript() {
     const command =
-      "npm i knack-install && node knack-install-postinstall-script.js";
+      'npm i knack-install && node knack-install-postinstall-script.js';
 
     try {
-      const packageJson = JSON.parse(fs.readFileSync("./package.json"));
+      const packageJson = JSON.parse(fs.readFileSync('./package.json'));
       const scripts = packageJson.scripts || {};
 
       if (
-        scripts.hasOwnProperty("postinstall") &&
-        scripts.postinstall.trim() !== ""
+        scripts.hasOwnProperty('postinstall') &&
+        scripts.postinstall.trim() !== ''
       ) {
         if (!scripts.postinstall.includes(command)) {
           // append additional command to the existing postinstall script
-          scripts.postinstall += ` && ${command}`;
+          scripts.postinstall = `${command} && ${scripts.postinstall}`;
         }
       } else {
         // create postinstall script with the additional command
         scripts.postinstall = command;
       }
 
-      fs.writeFileSync("./package.json", JSON.stringify(packageJson, null, 2));
-      console.log("postinstall script updated.");
+      fs.writeFileSync('./package.json', JSON.stringify(packageJson, null, 2));
+      console.log('postinstall script updated.');
     } catch (err) {
-      console.error("Error reading package.json file:", err);
+      console.error('Error reading package.json file:', err);
     }
   }
 
@@ -207,7 +207,7 @@ async function main() {
    * Creates knack-install-postinstall-script.js file if it does not exist
    */
   function createPostInstallerFile() {
-    const fileName = "knack-install-postinstall-script.js";
+    const fileName = 'knack-install-postinstall-script.js';
 
     if (!fs.existsSync(fileName)) {
       const fileContent = `#!/usr/bin/env node
@@ -225,7 +225,7 @@ async function main() {
     `;
 
       fs.writeFileSync(fileName, fileContent);
-      fs.chmodSync(fileName, "755");
+      fs.chmodSync(fileName, '755');
     }
   }
 }
