@@ -1,6 +1,6 @@
 {
   "name": "knack-install",
-  "version": "1.0.18",
+  "version": "1.0.19",
   "description": "installs a repository as a node module",
   "main": "./dist/index.js",
   "bin": "./dist/index.js",
